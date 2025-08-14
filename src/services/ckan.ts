@@ -1,4 +1,5 @@
-const CKAN_BASE = (process.env.REACT_APP_CKAN_BASE || 'https://www.data.gov.ma') + '/api/3/action';
+// Vite uses import.meta.env for client-side env vars. Optional override via VITE_CKAN_BASE
+const CKAN_BASE = ((import.meta as any).env?.VITE_CKAN_BASE || 'https://www.data.gov.ma') + '/api/3/action';
 
 export interface CkanResource {
   id: string;
