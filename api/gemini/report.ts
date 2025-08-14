@@ -1,4 +1,4 @@
-// Avoid '@vercel/node' types to prevent TS errors on Vercel's type pass
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 type DatasetColumn = {
   name: string;
@@ -13,7 +13,7 @@ type DatasetProfile = {
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
