@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+// Using untyped request/response to avoid requiring '@vercel/node' types at build time
 
 type DatasetColumn = {
   name: string;
@@ -222,7 +222,7 @@ function generateFallbackSuggestions(profile: DatasetProfile): GeminiResponse {
   };
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
