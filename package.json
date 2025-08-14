@@ -6,6 +6,7 @@
   "keywords": ["data-visualization", "ai", "dashboard", "analytics", "react", "typescript"],
   "author": "Your Name <your.email@example.com>",
   "homepage": ".",
+  "type": "module",
   "dependencies": {
     "@headlessui/react": "^2.2.7",
     "@heroicons/react": "^2.2.0",
