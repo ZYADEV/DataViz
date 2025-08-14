@@ -8,15 +8,18 @@ const API_BASE: string = ((import.meta as any).env?.VITE_API_BASE || '').replace
 export const generateVisualizationSuggestions = async (
   datasetProfile: DatasetProfile
 ): Promise<GeminiResponse> => {
-  // Use direct Gemini API for local development
-  if (GEMINI_API_KEY && (!API_BASE || API_BASE === '')) {
+  // Use direct Gemini API for local development only
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (GEMINI_API_KEY && isLocal) {
+    console.log('Using direct Gemini API for local development');
     return generateVisualizationSuggestionsDirectly(datasetProfile);
   }
   
   // Use serverless API for production
   try {
+    console.log('Using serverless API for production');
     const minimalProfile = minifyProfileForAI(datasetProfile);
-    const response = await fetch(`${API_BASE}/api/gemini/suggestions`, {
+    const response = await fetch(`/api/gemini/suggestions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(minimalProfile),
@@ -111,13 +114,14 @@ export const suggestColumnNames = async (
   if (genericNames.size === 0) return {};
 
   // Use direct Gemini API for local development
-  if (GEMINI_API_KEY && (!API_BASE || API_BASE === '')) {
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (GEMINI_API_KEY && isLocal) {
     return suggestColumnNamesDirectly(datasetProfile, genericNames);
   }
 
   try {
     const minimalProfile = minifyProfileForAI(datasetProfile, 5);
-    const response = await fetch(`${API_BASE}/api/gemini/rename-columns`, {
+    const response = await fetch(`/api/gemini/rename-columns`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(minimalProfile),
@@ -189,13 +193,14 @@ export const generateDataAnalysisReport = async (
   insights: string[]
 ): Promise<string> => {
   // Use direct Gemini API for local development
-  if (GEMINI_API_KEY && (!API_BASE || API_BASE === '')) {
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (GEMINI_API_KEY && isLocal) {
     return generateDataAnalysisReportDirectly(datasetProfile, filteredData, insights);
   }
 
   try {
     const minimalProfile = minifyProfileForAI(datasetProfile);
-    const response = await fetch(`${API_BASE}/api/gemini/report`, {
+    const response = await fetch(`/api/gemini/report`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ datasetProfile: minimalProfile, filteredData: filteredData.slice(0, 2000), insights: insights.slice(0, 100) }),
