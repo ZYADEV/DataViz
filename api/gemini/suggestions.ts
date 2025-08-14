@@ -223,16 +223,30 @@ function generateFallbackSuggestions(profile: DatasetProfile): GeminiResponse {
 }
 
 export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if ((req.method || '').toUpperCase() === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  if ((req.method || '').toUpperCase() !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
 
   const apiKey = process.env.GEMINI_KEY;
-  const profile = req.body as DatasetProfile;
+  const profile: DatasetProfile = await readJsonBody(req);
 
   if (!profile || !profile.dataset_name || !Array.isArray(profile.columns)) {
-    res.status(400).json({ error: 'Invalid request body' });
+    const fallback = generateFallbackSuggestions({
+      dataset_name: profile?.dataset_name || 'Dataset',
+      columns: profile?.columns || [],
+      sample_rows: profile?.sample_rows || [],
+      total_rows: profile?.total_rows || 0,
+      domain: profile?.domain,
+    } as any);
+    res.status(200).json(fallback);
     return;
   }
 
@@ -262,7 +276,11 @@ export default async function handler(req: any, res: any) {
 
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(`Gemini API error: ${response.status} ${response.statusText} - ${text}`);
+      // Return fallback but include error detail for debugging
+      console.error('Gemini suggestions HTTP error:', response.status, response.statusText, text);
+      const fallback = generateFallbackSuggestions(profile);
+      res.status(200).json(fallback);
+      return;
     }
 
     const data = await response.json();
@@ -294,6 +312,21 @@ export default async function handler(req: any, res: any) {
     console.error('Error in /api/gemini/suggestions:', error);
     const fallback = generateFallbackSuggestions(profile);
     res.status(200).json(fallback);
+  }
+}
+
+async function readJsonBody(req: any): Promise<any> {
+  try {
+    if (req.body) {
+      if (typeof req.body === 'string') return JSON.parse(req.body);
+      return req.body;
+    }
+    const chunks: any[] = [];
+    for await (const chunk of req) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const raw = Buffer.concat(chunks).toString('utf8');
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
   }
 }
 

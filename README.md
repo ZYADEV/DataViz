@@ -51,14 +51,13 @@ An advanced data visualization platform powered by AI that transforms raw data i
    ```
 
 3. **Set up environment variables**
+   Create `.env.local` for local development:
    ```bash
-   cp .env.example .env
+   echo "VITE_GEMINI_KEY=your_gemini_api_key_here" > .env.local
    ```
    
-   Add your Gemini API key to `.env`:
-   ```
-   GEMINI_KEY=your_gemini_api_key_here
-   ```
+   Replace `your_gemini_api_key_here` with your actual Gemini API key from:
+   https://aistudio.google.com/app/apikey
 
 4. **Start development server**
    ```bash
@@ -98,8 +97,9 @@ An advanced data visualization platform powered by AI that transforms raw data i
 3. **Set Environment Variables**
    In Vercel dashboard:
    - Go to Project Settings > Environment Variables
-   - Add: `GEMINI_KEY` with your API key
+   - Add: `GEMINI_KEY` with your Google Gemini API key
    - Set for Production, Preview, and Development
+   - Note: This is different from `VITE_GEMINI_KEY` used for local dev
 
 4. **Deploy**
    - Vercel will automatically build and deploy
@@ -149,9 +149,10 @@ Customize AI prompts and responses in `src/services/geminiApi.ts`.
 
 ## 🔒 Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `GEMINI_KEY` | Google Gemini API key for AI features | Yes |
+| Variable | Description | Required | Environment |
+|----------|-------------|----------|-------------|
+| `VITE_GEMINI_KEY` | Google Gemini API key for local development | Yes (local) | Local only |
+| `GEMINI_KEY` | Google Gemini API key for serverless functions | Yes (production) | Vercel only |
 
 ## 🛠️ Tech Stack
 

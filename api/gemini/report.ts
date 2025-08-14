@@ -14,10 +14,11 @@ type DatasetProfile = {
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
-  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if ((req.method || '').toUpperCase() === 'OPTIONS') { res.status(200).end(); return; }
+  if ((req.method || '').toUpperCase() !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
 
   const apiKey = process.env.GEMINI_KEY;
   if (!apiKey) {
@@ -26,7 +27,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { datasetProfile, filteredData, insights } = req.body as {
+    const { datasetProfile, filteredData, insights } = (await readJsonBody(req)) as {
       datasetProfile: DatasetProfile;
       filteredData: any[];
       insights: string[];
@@ -138,6 +139,8 @@ Keep the total length to approximately 2 pages when printed. Use specific number
     });
 
     if (!response.ok) {
+      const text = await response.text();
+      console.error('Gemini report HTTP error:', response.status, response.statusText, text);
       res.status(200).json({ content: fallbackReport({ datasetProfile, filteredData, insights }) });
       return;
     }
@@ -151,7 +154,22 @@ Keep the total length to approximately 2 pages when printed. Use specific number
 
     res.status(200).json({ content: generatedText });
   } catch (e) {
-    res.status(200).json({ content: fallbackReport(req.body) });
+    res.status(200).json({ content: fallbackReport(await readJsonBody(req)) });
+  }
+}
+
+async function readJsonBody(req: any): Promise<any> {
+  try {
+    if (req.body) {
+      if (typeof req.body === 'string') return JSON.parse(req.body);
+      return req.body;
+    }
+    const chunks: any[] = [];
+    for await (const chunk of req) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const raw = Buffer.concat(chunks).toString('utf8');
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
   }
 }
 
